@@ -8,19 +8,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #define OFFSET 49
-#define BUF_SIZE 50
+#define SIZE 50
 
 int counter, discarded;
 
 void replaceSpaces(char* original_name, FILE* output_log){
 
 	// Initialize all our variables and allocate space on the heap
-	int i, j, result, period = 0;
-	int count = 0;
-	int first = 0;
+	int i, j, result;
+	int period = 0, periodBool = 0, count = 0, first = 0; 
 	int len = strlen(original_name);
 	
 	char* argument = original_name;
@@ -42,9 +40,10 @@ void replaceSpaces(char* original_name, FILE* output_log){
 			file[i] = '_';
 		}
 		if (file[i] == '.'){
-			if ( i > period){
-				period = i;
-			}
+			periodBool++;
+		}
+		if (file[i] == '.' && periodBool == 2){
+			period = i;
 		}
 	}
 	file[--len] = '\0';
@@ -53,7 +52,7 @@ void replaceSpaces(char* original_name, FILE* output_log){
 	while(1){
 		if (count == 10){
 			fprintf(output_log, "Unable to rename file: '%s'. Please "
-				"rename manually\n", file);
+				"rename manually\n", original_name);
 			discarded++;
 			counter++;
 			return;
@@ -63,7 +62,7 @@ void replaceSpaces(char* original_name, FILE* output_log){
 		// If there is a file already named, then rename it again
 		if(test != NULL){
 			fclose(test);
-			fprintf(output_log, "Entry %d: '%s' is taken. Appending...\n", 
+			fprintf(output_log, "Entry %d: '%s' is taken.\n", 
 				counter, file);
 
 			// Check if this is the first time re-renaming it
@@ -85,11 +84,12 @@ void replaceSpaces(char* original_name, FILE* output_log){
 	}
 
 	result = rename(original, file);
-			
+	
 	// Check rename was successful and log all of the changes we made
 	if (result == 0){
 		fprintf(output_log, "Entry %d: Renamed file '%s' to '%s'\n", 
 		counter++, original, file);
+		fprintf(output_log, "\n");
 	}
 	
 	return;
@@ -97,67 +97,42 @@ void replaceSpaces(char* original_name, FILE* output_log){
 
 int main(int argc, char** argv){
 
-	char result;
-	char out_log[100];
+	char out_log[SIZE];
+	char buf[SIZE];
 
-	// Warn user of risks associated with this 
-	printf("\nThis will rename all the files in this directory and all\n"
-		"its subdirectories. It is recommended to not run this script in\n"
-		"the home or root directory as it can edit important config\n"
-		"files. Please read the README for a more detailed explanation.\n"	 		"Do you wish to continue? (Y/N)\n");
-	printf("\n");
+	printf("Name a file to write the output log to: \n");
+	scanf("%s", &out_log);
 	
-	// Keep looping until user gives confirmation
-	while(1){	
+	printf("Writing to '%s':\n", out_log);
 		
-		scanf("%s", &result);
-
-		// Check if user wants to proceed or not
-		if (result == 'N' || result == 'n'){
-			return 0;
-		}
-		if (result == 'Y' || result == 'y'){
+	// Declare and initialize variables
+	FILE *input_log, *output_log;
 			
-			printf("Name a file to write the output log to: ");
-			scanf("%s", &out_log);
-			printf("Writing to '%s':\n", out_log);
-		
-			// Declare and initialize variables
-			FILE *input_log, *output_log;
-			char buf[BUF_SIZE];
-			
-			counter = 1;
-			discarded = 0;
+	counter = 1;
+	discarded = 0;
 
-			// Open our files
-			input_log = fopen(argv[1], "r+");
-			output_log = fopen(out_log, "w+");
+	// Open our files
+	input_log = fopen(argv[1], "r+");
+	output_log = fopen(out_log, "w+");
 	
-			// Check if fopen was successful for our files
-			if (!input_log){
-				return 1;
-			}
-
-			if (!output_log){
-				return 1;
-			}
-
-			fprintf(output_log, "Beginning to rename...\n");
-			fprintf(output_log, "\n");
-
-			// Replace spaces for all of our files
-			while (fgets(buf, BUF_SIZE, input_log) != NULL){
-				replaceSpaces(buf, output_log);
-				memset(buf, 0, BUF_SIZE);
-			}
-	
-			// Done renaming. Print to log file and return
-			fprintf(output_log, "\nDone renaming. Total files renamed"
-				": %d\n", counter - 1 - discarded);
-			fclose(input_log);
-			return 0;
-		}
-		printf("Invalid input. Do you wish to proceed? (Y/N)\n");
+	// Check if fopen was successful for our files
+	if (!input_log || !output_log){
+		return 1;
 	}
+
+	fprintf(output_log, "Beginning to rename...\n");
+	fprintf(output_log, "\n");
+
+	// Replace spaces for all of our files
+	while (fgets(buf, SIZE, input_log) != NULL){
+		replaceSpaces(buf, output_log);
+//		memset(buf, 0, SIZE);
+	}
+	
+	// Done renaming. Print to log file and return
+	fprintf(output_log, "\nDone renaming. Total files renamed"
+		": %d\n", counter - discarded - 1);
+	fclose(input_log);
+
 	return 0;
 }
