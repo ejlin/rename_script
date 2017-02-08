@@ -7,19 +7,25 @@
 #include <string.h>
 #include <time.h>
 
+#define CLASSIFIED ./ .
+
 int counter;
 
 void replaceSpaces(char* original_name, FILE* output_log){
 
 	// Initialize all our variables and allocate space on the heap
 	int i = 0;
+	int j = 0;
+	int first = 0;
 	int count = 0;
+	int period = 0;
 	int result;
 	int len = strlen(original_name);
 	
 	char* argument = original_name;
 	char* file = malloc(3*len);
 	char* original = malloc(len);
+
 	
 	// Copy over relevant characters and rename ' ' to '_'
 	for ( i = 0; i < len - 1; i++){
@@ -30,6 +36,11 @@ void replaceSpaces(char* original_name, FILE* output_log){
 	for (i = 0; i < len - 1; i++){
 		if (file[i] == ' '){
 			file[i] = '_';
+		}
+		if (file[i] == '.'){
+			if ( i > period){
+				period = i;
+			}
 		}
 	}
 	file[len-1] = '\0';
@@ -43,8 +54,20 @@ void replaceSpaces(char* original_name, FILE* output_log){
 			fclose(test);
 			fprintf(output_log, "Entry %d: %s is taken. Appending...\n", 
 				counter, file);
-			file[len++] = (char)(95);
-			file[len++] = (char)(count++ + 49);
+			if ( first == 0){
+			for (j = len + (len - period - 3); j >= period + 2; j--){
+				file[j] = file[j-2];
+			}
+			
+		/*	for (j = period + 2; j < len + (len - period - 3); j++){
+				file[j] = file[j-2];
+			}
+		*/
+			file[period] = (char)(95);
+			file[len + (len - period - 3) + 1] = '\0';
+			first++;
+			}
+			file[period + 1] = (char)(count++ + 49);
 		}
 		else{
 			break;
