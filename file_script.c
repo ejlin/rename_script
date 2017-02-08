@@ -22,12 +22,12 @@ void replaceSpaces(char* original_name, FILE* output_log){
 	char* original = malloc(len);
 	
 	// Copy over relevant characters and rename ' ' to '_'
-	for ( i = 0; i < len-1; i++){
+	for ( i = 0; i < len - 1; i++){
 		file[i] = argument[i];
 		original[i] = original_name[i];
 	}
-	original[len -1 ] = '\0';
-	for (i = 0; i < len-1; i++){
+	original[len - 1] = '\0';
+	for (i = 0; i < len - 1; i++){
 		if (file[i] == ' '){
 			file[i] = '_';
 		}
@@ -66,34 +66,56 @@ void replaceSpaces(char* original_name, FILE* output_log){
 
 int main(int argc, char** argv){
 
-	// Open our log file
-	FILE *input_log, *output_log;
-	char buf[50];
-	counter = 1;
+	char result;
 
-	input_log = fopen("log.txt", "r+");
-	output_log = fopen("output_log.txt", "w+");
+	printf("This will rename all the files in this directory and all its"
+		" subdirectories. It is recommended to not run this script in the"
+		" home or root directory as it can edit important config files."
+		" Please read the README for a more detailed"
+		" explanation. Do you wish to continue? (Y/N)\n");
+
 	
-	// Check if fopen was successful
-	if (!input_log){
-		return 1;
-	}
+	while(1){	
+		
+		scanf("%s", &result);
 
-	if (!output_log){
-		return 1;
-	}
+		if (result == 'N' || result == 'n'){
+			return 0;
+		}
+		if (result == 'Y' || result == 'y'){
 
-	fprintf(output_log, "Beginning to rename...\n");
-	fprintf(output_log, "\n");
+			// Open our log file
+			FILE *input_log, *output_log;
+			char buf[50];
+			counter = 1;
 
-	// Replace spaces for all of our files
-	while (fgets(buf, 50, input_log) != NULL){
-		replaceSpaces(buf, output_log);
-		memset(buf, 0, 50);
-	}
+			input_log = fopen("log.txt", "r+");
+			output_log = fopen("output_log.txt", "w+");
 	
-	fprintf(output_log, "\nDone renaming. Total files renamed: %d\n", 
-		counter - 1);
-	fclose(input_log);
+			// Check if fopen was successful
+			if (!input_log){
+				return 1;
+			}
+
+			if (!output_log){
+				return 1;
+			}
+
+			fprintf(output_log, "Beginning to rename...\n");
+			fprintf(output_log, "\n");
+
+			// Replace spaces for all of our files
+			while (fgets(buf, 50, input_log) != NULL){
+				replaceSpaces(buf, output_log);
+				memset(buf, 0, 50);
+			}
+	
+			fprintf(output_log, "\nDone renaming. Total files renamed"
+				": %d\n", counter - 1);
+			fclose(input_log);
+			return 0;
+		}
+		printf("Invalid input. Do you wish to proceed? (Y/N)\n");
+	}
 	return 0;
 }
